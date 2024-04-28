@@ -1,0 +1,67 @@
+Composite Differentially Private SGD (CDP-SGD) is an algorithm that integrates the composite DP mechanism into SGD, applicable to deep learning scenarios. It resolves several issues inherent in existing DPSGD and its derivatives, including: 1) the inability to provide pure-DP guarantees, 2) unbounded outputs leading to potential gradient explosions, 3) slow convergence rates, and 4) diminished model accuracy due to added noise.
+
+This paper conducts a comparative analysis against state-of-the-art baseline methods: DPSGD, DPAGD, DPSGD-TS, DPSGD-HF, and DPSUR. By substituting their Gaussian noise mechanisms with our composite DP mechanism, our approach demonstrates enhanced performance over these baselines. The following are the commands required to execute this project:
+
+python3 main.py --algorithm DPSGD --dataset_name MNIST --lr 0.1 --batch_size 1024 --C_t 0.5 --epsilon 1 --delta 10e-7 --device cuda
+
+python3 main.py --algorithm DPSGD-Comp --dataset_name MNIST --lr 0.1 --batch_size 1024 --C_t 0.5 --epsilon 1 --PM_index 2 --T_acc 90.0 --t_ep_rate 0.01 --t_ep_min 0.9 --t_ep_max 1.1 --T_gain 1.01 --t_lr_rate 0.1 --t_lr_min 0.1 --t_lr_max 2 --N 10 --device cuda
+
+python3 main.py --algorithm DPAGD --dataset_name MNIST --lr 0.1 --batch_size 1024 --C_t 0.5 --epsilon 1 --delta 10e-7 --device cuda
+
+python3 main.py --algorithm DPAGD-Comp --dataset_name MNIST --lr 0.1 --batch_size 1024 --C_t 0.5 --epsilon 1 --PM_index 2 --T_acc 90.0 --t_ep_rate 0.01 --t_ep_min 0.9 --t_ep_max 1.1 --T_gain 1.01 --t_lr_rate 0.1 --t_lr_min 0.1 --t_lr_max 2 --N 10 --device cuda
+
+python3 main.py --algorithm DPSGD-TS --dataset_name MNIST --lr 0.1 --batch_size 1024 --C_t 0.5 --epsilon 1 --delta 10e-7 --device cuda
+
+python3 main.py --algorithm DPSGD-TS-Comp --dataset_name MNIST --lr 0.1 --batch_size 1024 --C_t 0.5 --epsilon 1 --PM_index 2 --T_acc 90.0 --t_ep_rate 0.01 --t_ep_min 0.9 --t_ep_max 1.1 --T_gain 1.01 --t_lr_rate 0.1 --t_lr_min 0.1 --t_lr_max 2 --N 10 --device cuda
+
+python3 main.py --algorithm DPSGD-HF --dataset_name MNIST --lr 0.1 --batch_size 1024 --C_t 0.5 --epsilon 1 --input_norm BN --delta 10e-7 --use_scattering --device cuda
+
+python3 main.py --algorithm DPSGD-HF-Comp --dataset_name MNIST --lr 0.1 --batch_size 1024 --C_t 0.5 --epsilon 1 --input_norm BN --use_scattering --PM_index 2 --T_acc 90.0 --t_ep_rate 0.01 --t_ep_min 0.9 --t_ep_max 1.1 --T_gain 1.01 --t_lr_rate 0.1 --t_lr_min 0.1 --t_lr_max 2 --N 10 --device cuda
+
+python3 main.py --algorithm DPSUR --dataset_name MNIST --lr 0.1 --batch_size 1024 --C_t 0.5 --epsilon 1 --delta 10e-7 --C_v 0.001 --sigma_v 1.3 --bs_valid 256 --beta -1 --device cuda
+
+python3 main.py --algorithm DPSUR-Comp --dataset_name MNIST --lr 0.1 --batch_size 1024 --C_t 0.5 --epsilon 1 --C_v 0.001 --sigma_v 1.3 --bs_valid 256 --beta -1 --PM_index 2 --T_acc 90.0 --t_ep_rate 0.01 --t_ep_min 0.9 --t_ep_max 1.1 --T_gain 1.01 --t_lr_rate 0.1 --t_lr_min 0.1 --t_lr_max 2 --N 10 --device cuda
+
+
+Here is a description of some parameters:
+
+	--algorithm (Choose the algorithm you use)
+
+	--dataset_name (select the dataset you are using)
+
+	--lr (Choose the initial learning rate you use)
+
+	--batch_size (batch size)
+
+	--C_t (size of gradient clipping threshold)
+
+	--epsilon (Privacy budget used to add noise, i.e. the size of the noise intensity)
+
+	--delta (parameter used in Gaussian noise)
+
+	--input_norm BN (parameter used by DPSUR and DPSGD-HF)
+
+	--use_scattering (parameters used by DPSUR and DPSGD-HF)
+
+	--PM_index (the composite DP mechanism employed defaults to mechanism 2, as it yields the best performance.)
+
+	--T_acc (parameter used by composite DP for adaptive adjustment of epsilon)
+
+	--t_ep_rate (parameter used by composite DP, which corresponds to $rate_{\epsilon}$in the paper)
+
+	--t_ep_min (the parameter used by composite DP, which corresponds to $\epsilon_{min}$in the paper)
+
+	--t_ep_max (parameter used by composite DP, corresponding to $\epsilon_{max}$in the paper)
+
+	--T_gain (parameter used by composite DP for adaptive lr adjustment)
+
+	--t_lr_rate (the parameter used by composite DP, corresponding to $rate_{\eta}$in the paper)
+
+	--t_lr_min (the parameter used by composite DP, corresponding to $\eta_{min}$in the paper)
+
+	--t_lr_max (parameter used by composite DP, corresponding to $\eta_{max}$in the paper)
+
+	--N (the parameter used by composite DP, which corresponds to $U$in the paper)
+
+
+When training with the DPAGD algorithm, it is crucial to pay careful attention to the parameter settings. In the train_and_validation/train_with_dp.py file, locate the train_with_dp_agd function that corresponds to the DPAGD algorithm you are using (or train_with_dp_agd_comp if using CDP-SGD). Manually configure the parameters on the line learning_rate = np.linspace(lr_min, lr_max, M). Here, lr_min and lr_max respectively represent the minimum and maximum learning rates utilized by the DPAGD algorithm, while M determines the number of intervals between lr_min and lr_max. This configuration generates a list of learning rates, learning_rate, which varies from the minimum to the maximum value. Setting these parameters correctly is critical, as improper configurations can prevent the model from converging.
